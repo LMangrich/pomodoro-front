@@ -18,7 +18,7 @@ export default function HeroSection() {
               </Button>
             </Link>
 
-            <Link href="/sign-up" >
+            <Link href="/cadastro" >
               <Button variant="primary" size="sm" className="md:px-6 md:py-2 md:text-20">
                 CADASTRAR
               </Button>

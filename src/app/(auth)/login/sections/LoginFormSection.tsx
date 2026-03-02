@@ -111,7 +111,7 @@ export default function LoginFormSection() {
                 Ainda não tem uma conta?{" "}
                 <button
                   type="button"
-                  onClick={() => router.push("/sign-up")}
+                  onClick={() => router.push("/cadastro")}
                   className="text-button-primary font-bold underline hover:text-button-primary transition-colors"
                 >
                   Cadastre-se.
