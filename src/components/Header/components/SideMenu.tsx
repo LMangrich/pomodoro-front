@@ -48,7 +48,7 @@ export const SideMenu = ({
   return (
     <>
       <div className={cn(
-        "fixed inset-y-0 right-0 z-50 bg-background text-off-white overflow-y-auto w-1/3",
+        "fixed inset-y-0 right-0 z-50 bg-background text-off-white overflow-y-auto w-full max-w-[200px]",
         isOpen ? "translate-x-0" : "translate-x-full",
         "transform transition-transform duration-300 ease-in-out",
         className

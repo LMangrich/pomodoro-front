@@ -6,9 +6,10 @@ import { useState, useMemo, useEffect } from "react";
 import { useSkills } from "@/src/hooks/useSkills";
 import { skillService } from "@/src/services/skill.service";
 import type { Skill } from "@/src/types/skill.types";
-import { StandingUpGirlIcon } from "@/src/components/Icon/Icon";
+import { RayIcon, StandingUpGirlIcon } from "@/src/components/Icon/Icon";
 import { Input } from "@/src/components/Input/Input";
 import { Button } from "@/src/components/Button/Button";
+import Pagination from "@/src/components/Pagination/Pagination";
 
 const SKILLS_PER_PAGE = 6;
 const DEFAULT_DURATION = 25; // Default pomodoro duration
@@ -43,7 +44,6 @@ export default function ChooseSkillModal({
     page * SKILLS_PER_PAGE
   );
 
-  // Fetch XP for visible skills
   useEffect(() => {
     paginated.forEach((skill) => {
       if (!skillXpMap[skill.id]) {
@@ -68,24 +68,20 @@ export default function ChooseSkillModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
-      <div className="max-w-5xl relative w-full bg-primary border border-border rounded-[20px] p-8 overflow-hidden">
-        
-        <StandingUpGirlIcon className="absolute -right-2 top-4 h-auto z-0" />
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm px-5">
+      <div className="max-w-5xl relative w-full bg-primary border border-border rounded-[20px] p-6 md:p-8 overflow-hidden">
+        <StandingUpGirlIcon className="absolute -right-2 top-4 h-auto z-0 hidden sm:block" />
 
-        <button
-          onClick={onClose}
-          className="absolute top-6 right-6 text-off-white hover:text-button-primary transition-colors text-24 z-10"
-        >
+        <button onClick={onClose} className="absolute top-4 md:top-6 right-4 md:right-6 text-off-white hover:text-button-primary transition-colors text-20 md:text-24 z-10">
           ✕
         </button>
 
-        <div className="relative z-10 flex items-start justify-between mb-8">
+        <div className="relative z-10 flex items-start justify-between mb-6 md:mb-8">
           <div>
-            <h2 className="text-off-white text-28 font-bold mb-2">
+            <h2 className="text-off-white text-20 md:text-28 font-bold mb-2">
               Escolha uma habilidade
             </h2>
-            <p className="text-off-white text-16">
+            <p className="text-off-white text-14 md:text-16">
               Escolha a habilidade que você quer trabalhar e receber XP:
             </p>
           </div>
@@ -110,36 +106,39 @@ export default function ChooseSkillModal({
         </div>
 
         <div className="relative z-10 mb-6">
-          <h3 className="text-off-white text-20 font-bold flex items-center gap-2 mb-6">
+          <h3 className="text-off-white text-16 md:text-20 font-bold flex items-center gap-2 mb-6">
             Todas as habilidades
-            <span className="text-button-primary text-20 font-normal">
+            <span className="text-button-primary text-16 md:text-20 font-normal">
               ({filtered.length})
             </span>
           </h3>
 
           {isLoading ? (
-            <p className="text-off-white text-14">Carregando habilidades...</p>
+            <p className="text-off-white text-12 md:text-14">Carregando habilidades...</p>
           ) : error ? (
-            <p className="text-red-400 text-14">Erro ao carregar habilidades: {error}</p>
+            <p className="text-red-400 text-12 md:text-14">Erro ao carregar habilidades: {error}</p>
           ) : (
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 max-h-[300px] overflow-y-auto pr-2">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4 max-h-[300px] overflow-y-auto pr-2">
             {paginated.map((skill) => (
               <Button
                 key={skill.id}
                 variant="secondary"
                 onClick={() => onChooseSkill(skill)}
-                className="bg-primary border border-inner-text-content rounded-[20px] p-4 flex items-center justify-between hover:border-button-primary transition-colors text-left"
+                className="bg-primary border border-inner-text-content rounded-[20px] hover:bg-button-primary/10 hover:border-button-primary p-3 md:p-4 flex flex-col md:flex-row items-start md:items-center justify-between transition-colors text-left"
               >
-                <div className="flex flex-col gap-5 px-2">
-                  <div className="flex flex-row items-center gap-3">
-                    <span className="text-16">{skill.emojString ?? "📚"}</span>
-                    <span className="text-off-white text-16 font-bold ">
+                <div className="flex flex-col gap-3 md:gap-5 w-full">
+                  <div className="flex flex-row items-center gap-2 md:gap-3">
+                    <span className="text-14 md:text-16">{skill.emojString ?? "📚"}</span>
+                    <span className="text-off-white text-14 md:text-16 font-bold ">
                       {skill.name}
                     </span>
                   </div>
 
-                  <span className="text-off-white text-14 font-medium ">
-                      Você receberá {skillXpMap[skill.id] ?? "..."} XP
+                  <span className="flex flex-row items-center gap-2 text-off-white text-12 md:text-14 font-medium ">
+                      Você receberá:
+                      <div className="bg-button-primary text-background px-2.5 py-1 rounded-[8px] text-11 md:text-12 font-bold whitespace-nowrap flex items-center gap-1">
+                        <RayIcon className="w-3 h-3" />  {skillXpMap[skill.id] ?? "..."} XP
+                      </div>
                   </span>
                 </div>
               </Button>
@@ -149,57 +148,19 @@ export default function ChooseSkillModal({
         </div>
 
         {totalPages > 1 && (
-        <div className="relative z-10 flex items-center justify-center gap-1 mb-6 mt-4">
-          <span className="text-off-white text-14 font-bold">
-            Página
-          </span>
-          {page > 1 && (
-            <button
-              onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
-              className="text-button-primary hover:text-off-white text-14 font-bold px-2"
-            >
-              ←
-            </button>
-          )}
-          {page > 2 && (
-            <span className="text-line text-12">...</span>
-          )}
-          {Array.from({ length: Math.min(totalPages, 3) }, (_, i) => {
-            const startPage = Math.max(1, page - 1);
-            const p = startPage + i;
-            if (p > totalPages) return null;
-            return (
-              <button
-                key={p}
-                onClick={() => setPage(p)}
-                className={`px-2 py-1 text-12 font-bold rounded transition-colors ${
-                  p === page
-                    ? 'bg-button-primary text-background'
-                    : 'text-line hover:bg-inner'
-                }`}
-              >
-                {p}
-              </button>
-            );
-          })}
-          {page < totalPages - 1 && (
-            <span className="text-line text-12">...</span>
-          )}
-          {page < totalPages && (
-            <button
-              onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
-              className="text-button-primary hover:text-off-white text-14 font-bold px-2"
-            >
-              →
-            </button>
-          )}
-        </div>
+          <div className="relative z-10 mb-6 mt-4">
+            <Pagination
+              currentPage={page}
+              totalPages={totalPages}
+              onPageChange={setPage}
+            />
+          </div>
         )}
 
         <Button
           variant="primary"
           onClick={onClose}
-          className="relative z-10 w-full h-[46px]"
+          className="relative z-10 w-full h-11 md:h-[46px] text-14 md:text-16"
         >
           CONTINUAR
         </Button>

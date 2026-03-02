@@ -5,25 +5,24 @@ import { useRouter } from "next/navigation";
 import ChooseSkillModal from "../components/Modal/ChooseSkillModal";
 import PomodoroCompleteModal from "../components/Modal/PomodoroCompleteModal";
 import { usePomodoro } from "@/src/hooks/usePomodoro";
+import { useUser } from "@/src/context/UserContext";
+import { useUserProfile } from "@/src/hooks/useUserProfile";
 import type { Skill } from "@/src/types/skill.types";
+import type { UserSkill } from "@/src/types/user.types";
 import { Button } from "@/src/components/Button/Button";
 import { cn } from "@/src/lib/utils";
-import { CogIcon, PlusIcon } from "@/src/components/Icon/Icon";
-
-type TimerMode = "pomodoro" | "short-break" | "long-break";
+import { CogIcon, PlusIcon, RayIcon } from "@/src/components/Icon/Icon";
+import { playNotificationSound } from "@/src/utils/audioNotification";
 
 export default function PomodoroTimerSection() {
   const router = useRouter();
+  const { userData } = useUser();
+  const { skills, refetch: refetchSkills } = useUserProfile(userData?.username);
   const { startPomodoro, abandonPomodoro, calculateExpectedXp, constants } = usePomodoro();
 
-  const timerModes = {
-    pomodoro: constants?.defaultDuration ?? 25,
-    "short-break": 5,
-    "long-break": 15,
-  };
+  const pomodoroMinutes = constants?.defaultDuration ?? 25;
 
-  const [mode, setMode] = useState<TimerMode>("pomodoro");
-  const [minutes, setMinutes] = useState(timerModes.pomodoro);
+  const [minutes, setMinutes] = useState(pomodoroMinutes);
   const [seconds, setSeconds] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
   const [selectedSkill, setSelectedSkill] = useState<Skill | null>(null);
@@ -31,6 +30,7 @@ export default function PomodoroTimerSection() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isCompleteModalOpen, setIsCompleteModalOpen] = useState(false);
   const [completedDuration, setCompletedDuration] = useState(0);
+  const [completedSkillData, setCompletedSkillData] = useState<UserSkill | null>(null);
 
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
@@ -39,10 +39,17 @@ export default function PomodoroTimerSection() {
       interval = setInterval(() => {
         if (seconds === 0) {
           if (minutes === 0) {
+            // Pomodoro complete
+            playNotificationSound();
             setIsRunning(false);
-            if (mode === "pomodoro" && selectedSkill) {
-              setCompletedDuration(timerModes[mode]);
+            if (selectedSkill) {
+              setCompletedDuration(pomodoroMinutes);
+              // Find the updated skill data after completion
+              const skillData = skills.find(s => s.id === selectedSkill.id);
+              setCompletedSkillData(skillData || null);
               setIsCompleteModalOpen(true);
+              // Refetch skills to get updated data
+              refetchSkills();
             }
           } else {
             setMinutes(minutes - 1);
@@ -57,20 +64,14 @@ export default function PomodoroTimerSection() {
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [isRunning, minutes, seconds, mode, selectedSkill]);
+  }, [isRunning, minutes, seconds, selectedSkill, pomodoroMinutes, skills, refetchSkills]);
 
-  const handleModeChange = (newMode: TimerMode) => {
-    setMode(newMode);
-    setMinutes(timerModes[newMode]);
-    setSeconds(0);
-    setIsRunning(false);
-  };
 
   const handleStartStop = async () => {
-    if (!isRunning && mode === "pomodoro" && selectedSkill) {
+    if (!isRunning && selectedSkill) {
       try {
-        console.log('[PomodoroTimerSection] Starting timer with skill:', selectedSkill.id, 'Duration:', timerModes.pomodoro);
-        await startPomodoro(selectedSkill.id, timerModes.pomodoro);
+        console.log('[PomodoroTimerSection] Starting timer with skill:', selectedSkill.id, 'Duration:', pomodoroMinutes);
+        await startPomodoro(selectedSkill.id, pomodoroMinutes);
         console.log('[PomodoroTimerSection] Timer started successfully');
         setIsRunning(true);
       } catch (err) {
@@ -78,7 +79,7 @@ export default function PomodoroTimerSection() {
         alert(`Erro ao iniciar pomodoro: ${err instanceof Error ? err.message : 'Desconhecido'}`);
         return;
       }
-    } else if (isRunning && mode === "pomodoro") {
+    } else if (isRunning) {
       try {
         await abandonPomodoro();
         setIsRunning(false);
@@ -95,17 +96,14 @@ export default function PomodoroTimerSection() {
   const handleChooseSkill = useCallback(async (skill: Skill) => {
     setSelectedSkill(skill);
     setIsModalOpen(false);
-    const xp = await calculateExpectedXp(skill.id, timerModes.pomodoro);
+    const xp = await calculateExpectedXp(skill.id, pomodoroMinutes);
     setExpectedXp(xp);
-  }, [calculateExpectedXp, timerModes.pomodoro]);
+  }, [calculateExpectedXp, pomodoroMinutes]);
 
-  const handleComplete = () => {
-    setIsCompleteModalOpen(true);
-  };
 
   const handleStartNewPomodoro = () => {
     setIsCompleteModalOpen(false);
-    setMinutes(timerModes[mode]);
+    setMinutes(pomodoroMinutes);
     setSeconds(0);
     setIsRunning(false);
   };
@@ -123,62 +121,25 @@ export default function PomodoroTimerSection() {
       />
       <PomodoroCompleteModal
         isOpen={isCompleteModalOpen}
-        onClose={() => setIsCompleteModalOpen(false)}
         onStartNew={handleStartNewPomodoro}
         onGoToProfile={handleGoToProfile}
         skillName={selectedSkill?.name || ""}
         xpEarned={expectedXp}
-        totalXp={expectedXp}
+        skillData={completedSkillData}
         completionTime={completedDuration}
       />
     <section className="flex flex-col items-center gap-12">
       <div className="w-full max-w-[623px] bg-primary border border-border rounded-[20px] p-8 flex flex-col items-center gap-10">
-        <div className="flex gap-3 w-full justify-center flex-wrap">
-          <Button
-            onClick={() => handleModeChange("pomodoro")}
-            variant="primary"
-            className={cn(
-              "px-6 py-2 text-14 border-none transition-colors",
-              mode === "pomodoro"
-                ? ""
-                : "bg-button-primary/70 hover:text-off-white"
-            )}
-          >
-            Pomodoro
+          <div className="flex flex-row w-full justify-center gap-5 ">
+          <Button variant="primary" className={cn("px-6 py-2 text-14 hover:opacity-100 border-none transition-colors")}>
+              Pomodoro
           </Button>
-          <Button
-            onClick={() => handleModeChange("short-break")}
-            variant="primary"
-            className={cn(
-              "px-6 py-2 text-14 border-none transition-colors",
-              mode === "short-break"
-                ? ""
-                : "bg-button-primary/70 hover:text-off-white"
-            )}
-          >
-            Pausa curta
-          </Button>
-          <Button
-            onClick={() => handleModeChange("long-break")}
-            variant="primary"
-            className={cn(
-              "px-6 py-2 text-14 border-none transition-colors",
-              mode === "long-break"
-                ? ""
-                : "bg-button-primary/70 hover:text-off-white"
-            )}
-          >
-            Pausa longa
-          </Button>
-          <Button
-            variant="primary"
-            className="max-w-[40px] w-full p-0 flex items-center justify-center"
-          >
+
+          <Button variant="primary" className="max-w-[40px] w-full p-0 flex items-center justify-center">
             <CogIcon className="text-background"/>
           </Button>
         </div>
 
-        {/* Timer Display */}
         <div className="text-off-white text-[96px] font-bold leading-none tracking-tight">
           {formatTime(minutes, seconds)}
         </div>
@@ -187,7 +148,7 @@ export default function PomodoroTimerSection() {
           <div 
             className="h-full bg-button-primary transition-all duration-1000"
             style={{ 
-              width: `${((timerModes[mode] * 60 - (minutes * 60 + seconds)) / (timerModes[mode] * 60)) * 100}%` 
+              width: `${((pomodoroMinutes * 60 - (minutes * 60 + seconds)) / (pomodoroMinutes * 60)) * 100}%` 
             }}
           />
         </div>
@@ -201,7 +162,7 @@ export default function PomodoroTimerSection() {
             !selectedSkill && "opacity-50 cursor-not-allowed"
           )}
         >
-          {isRunning ? "PAUSAR" : "COMEÇAR"}
+          {isRunning ? "ABANDONAR" : "COMEÇAR"}
         </Button>
       </div>
 
@@ -221,37 +182,21 @@ export default function PomodoroTimerSection() {
         </div>
         
         {selectedSkill ? (
-          <>
-            <div className="border-2 border-line rounded-[20px] p-4 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <span className="text-20">{selectedSkill.emojString ?? "📚"}</span>
-                <span className="text-off-white text-20 font-bold">
-                  {selectedSkill.name}
-                </span>
-              </div>
-              <div className="bg-button-primary text-background px-3 py-1.5 rounded-[8px] text-16 font-bold flex items-center gap-2">
-                ⚡ {expectedXp} XP
-              </div>
+          <div className="border-2 border-line rounded-[20px] p-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <span className="text-20">{selectedSkill.emojString ?? "📚"}</span>
+              <span className="text-off-white text-20 font-bold">
+                {selectedSkill.name}
+              </span>
             </div>
-            <Button
-              variant="primary"
-              onClick={handleComplete}
-              disabled={!isRunning}
-              className={cn(
-                "w-full h-[46px]",
-                !isRunning && "opacity-50 cursor-not-allowed"
-              )}
-            >
-              <div className="flex items-center justify-center gap-2">
-                <span className="text-16">x</span>
-                ABANDONAR
-              </div>
-            </Button>
-          </>
+            <div className="bg-button-primary text-background px-3 py-1.5 rounded-[8px] text-16 font-bold flex items-center gap-2">
+              <RayIcon className="w-4 h-4" /> {expectedXp} XP
+            </div>
+          </div>
         ) : (
           <Button
             variant="secondary"
-            className="rounded-[20px] p-7 text-16"
+            className="rounded-[20px] p-7 text-16 hover:bg-button-primary/10 hover:text-off-white border-button-primary"
             onClick={() => setIsModalOpen(true)}
           >
             <div className="flex flex-row items-center justify-center gap-4">

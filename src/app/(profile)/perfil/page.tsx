@@ -12,7 +12,7 @@ export default function ProfilePage() {
     <ProtectedRoute>
       <HeaderSection />
       <main>
-        <div className="max-w-5xl bg-primary border border-border rounded-[20px] mx-auto">
+        <div className="max-w-xl md:max-w-5xl bg-primary border border-border rounded-[20px] mx-auto">
             <ProfileHeaderSection />
             <ProfileStatsSection />
             <StatisticsSection />

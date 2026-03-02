@@ -10,24 +10,22 @@ export interface AuthResponse {
 }
 
 export interface UserSkill {
-  skillId: number;
+  id: number;
   skillName: string;
   icon?: string;
-  xp: number;
-  level: number;
+  totalXp: number;
+  currentLevel: number;
   xpForNextLevel: number;
-  xpInCurrentLevel: number;
+  xpNeededForNextLevel: number;
+  maxLevel: boolean;
 }
 
 export interface UserStats {
   username: string;
+  nome: string;
+  totalLevelsGained: number;
   totalXp: number;
-  totalFocusMinutes: number;
-  totalPomodoros: number;
-  completedPomodoros: number;
-  abandonedPomodoros: number;
-  skills: UserSkill[];
+  totalFocusedTimeHours: number;
+  totalMasteredSkills: number;
+  lastUpdated: string;
 }
-
-// Legacy alias kept for UserContext compatibility
-export type VetUserData = UserData;

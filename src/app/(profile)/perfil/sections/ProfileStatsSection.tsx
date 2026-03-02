@@ -3,16 +3,10 @@
 import { useState } from "react";
 import { useUser } from "@/src/context/UserContext";
 import { useUserProfile } from "@/src/hooks/useUserProfile";
+import { RayIcon } from "@/src/components/Icon/Icon";
+import Pagination from "@/src/components/Pagination/Pagination";
 
 const SKILLS_PER_PAGE = 6;
-
-const SKILL_ICONS: Record<string, string> = {
-  "Programação": "💻",
-  "Língua estrangeira": "🌍",
-  "Desenho": "🎨",
-  "Arte 3D": "🎭",
-  "Matemática": "📊",
-};
 
 export default function ProfileStatsSection() {
   const { userData } = useUser();
@@ -26,41 +20,41 @@ export default function ProfileStatsSection() {
   );
 
   return (
-    <section className="w-full px-10 py-2">
-        <h2 className="text-off-white text-24 font-bold mb-9">
+    <section className="w-full px-5 md:px-10 py-2">
+        <h2 className="text-off-white text-20 md:text-24 font-bold mb-6 md:mb-9">
             Habilidades
         </h2>
 
         {isLoading ? (
-          <p className="text-off-white text-14">Carregando habilidades...</p>
+          <p className="text-off-white text-12 md:text-14">Carregando habilidades...</p>
         ) : (
-        <div className="grid grid-cols-3 gap-3 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4 mb-6">
           {paginated.map((skill) => (
             <div
-              key={skill.skillId}
-              className="w-full max-w-[302px] border-2 border-button-primary rounded-[20px] p-4"
+              key={skill.id}
+              className="w-full border-2 border-button-primary rounded-[20px] p-3 md:p-4"
             >
-              <div className="flex flex-row gap-3 mb-3">
-                <div className="w-12 h-12 self-center border-2 border-button-primary rounded-[8px] flex items-center justify-center">
-                  <span className="text-20">{SKILL_ICONS[skill.skillName] ?? "📚"}</span>
+              <div className="flex flex-row gap-2 md:gap-3 mb-3">
+                <div className="w-10 md:w-12 h-10 md:h-12 self-center flex-shrink-0 flex items-center justify-center">
+                  <span className="text-16 md:text-20 ">{skill.icon}</span>
                 </div>
-                <div className="flex flex-col flex-1 gap-4">
-                  <h3 className="text-off-white text-16 font-bold">
+                <div className="flex flex-col flex-1 gap-3 md:gap-4 min-w-0">
+                  <h3 className="text-off-white text-14 md:text-16 font-bold truncate">
                     {skill.skillName}
                   </h3>
                   <div className="flex flex-col w-full items-start gap-2">
-                    <div className="text-off-white text-12 font-bold">
-                      ⚡ {skill.xp} XP
+                    <div className="text-off-white text-11 md:text-12 font-bold flex items-center gap-1">
+                      <RayIcon className="text-button-primary flex-shrink-0" /> {skill.totalXp} XP
                     </div>
-                    <div className="flex flex-row items-center  gap-4 w-full">
-                        <div className="flex-1 h-2.5 bg-border rounded-full overflow-hidden">
+                    <div className="flex flex-row items-center gap-2 md:gap-4 w-full">
+                        <div className="flex-1 h-2.5 bg-border rounded-full overflow-hidden min-w-0">
                         <div
                             className="h-full bg-button-primary rounded-full"
-                            style={{ width: `${Math.min(100, (skill.xpInCurrentLevel / skill.xpForNextLevel) * 100)}%` }}
+                            style={{ width: `${Math.min(100, (skill.xpNeededForNextLevel > 0 ? ((skill.xpForNextLevel - skill.xpNeededForNextLevel) / skill.xpForNextLevel) * 100 : 100))}%` }}
                         />
                         </div>
-                        <span className="text-off-white text-12 font-bold">
-                        NV. {skill.level}
+                        <span className="text-off-white text-11 md:text-12 font-bold whitespace-nowrap">
+                        NV. {skill.currentLevel}
                         </span>
                     </div>
                   </div>
@@ -71,32 +65,13 @@ export default function ProfileStatsSection() {
         </div>
         )}
 
-        <div className="flex items-center gap-8 justify-end">
-            <span className="text-off-white text-16 font-bold">
-                Página
-            </span>
-            <div className="flex flex-row gap-6 items-center">
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-                  <button
-                    key={p}
-                    onClick={() => setPage(p)}
-                    className={`font-bold text-16 ${
-                      p === page ? "text-off-white" : "text-line"
-                    }`}
-                  >
-                    {p}
-                  </button>
-                ))}
-                {page < totalPages && (
-                  <button
-                    onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
-                    className="text-button-primary text-16 font-bold"
-                  >
-                    &gt;
-                  </button>
-                )}
-            </div>
-          </div>
+        <div className="flex justify-end">
+          <Pagination
+            currentPage={page}
+            totalPages={totalPages}
+            onPageChange={setPage}
+          />
+        </div>
     </section>
   );
 }
