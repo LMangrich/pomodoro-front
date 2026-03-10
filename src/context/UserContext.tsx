@@ -20,13 +20,13 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // On app startup, try to fetch current user from backend
     const loadUserData = async () => {
       try {
         const response = await authService.currentUser();
-        setUserData(response.user);
-      } catch (error) {
-        // User is not authenticated or session expired
+        if (response?.user) {
+          setUserData(response.user);
+        }
+      } catch {
         setUserData(null);
       } finally {
         setIsLoading(false);

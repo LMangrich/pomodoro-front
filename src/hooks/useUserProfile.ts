@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { userService } from '@/src/services/user.service';
+import { skillService } from '@/src/services/skill.service';
 import type { UserStats, UserSkill } from '@/src/types/user.types';
 
 export const useUserProfile = (username: string | null | undefined) => {
@@ -15,14 +16,20 @@ export const useUserProfile = (username: string | null | undefined) => {
     setIsLoading(true);
     setError(null);
     try {
-      const [statsData, skillsData] = await Promise.all([
+      const [statsData, skillsData, allSkills] = await Promise.all([
         userService.getStats(username),
         userService.getSkills(username),
+        skillService.listAll().catch(() => []),
       ]);
+      const emojiMap = new Map(allSkills.map((s) => [s.name.toLowerCase(), s.emojString]));
+      const enriched = skillsData.map((s) => ({
+        ...s,
+        emojString: s.emojString ?? emojiMap.get(s.skillName.toLowerCase()),
+      }));
       setStats(statsData);
-      setSkills(skillsData);
-    } catch (err: any) {
-      setError(err.message || 'Erro ao carregar perfil');
+      setSkills(enriched);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Erro ao carregar perfil');
     } finally {
       setIsLoading(false);
     }

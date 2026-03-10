@@ -32,11 +32,11 @@ export default function ProfileStatsSection() {
           {paginated.map((skill) => (
             <div
               key={skill.id}
-              className="w-full border-2 border-button-primary rounded-[20px] p-3 md:p-4"
+              className="w-full max-w-[303px] border border-button-primary rounded-[20px] p-3 lg:px-4 lg:py-3"
             >
               <div className="flex flex-row gap-2 md:gap-3 mb-3">
                 <div className="w-10 md:w-12 h-10 md:h-12 self-center flex-shrink-0 flex items-center justify-center">
-                  <span className="text-16 md:text-20 ">{skill.icon}</span>
+                  <span className="text-16 md:text-20 ">{skill.emojString ?? "📚"}</span>
                 </div>
                 <div className="flex flex-col flex-1 gap-3 md:gap-4 min-w-0">
                   <h3 className="text-off-white text-14 md:text-16 font-bold truncate">

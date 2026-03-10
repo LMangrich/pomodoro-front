@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import { Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { UserProvider } from "@/src/context/UserContext";
+import { PomodoroProvider } from "@/src/context/PomodoroContext";
 import { AuthChecker } from "@/src/components/AuthChecker/AuthChecker";
+import PomodoroCompleteToast from "@/src/components/PomodoroCompleteToast/PomodoroCompleteToast";
 
 const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
@@ -24,9 +26,12 @@ export default function RootLayout({
     <html lang="pt-BR">
       <body className={`${spaceGrotesk.variable} antialiased`}>
         <UserProvider>
-          <AuthChecker>
-            {children}
-          </AuthChecker>
+          <PomodoroProvider>
+            <AuthChecker>
+              {children}
+            </AuthChecker>
+            <PomodoroCompleteToast />
+          </PomodoroProvider>
         </UserProvider>
       </body>
     </html>

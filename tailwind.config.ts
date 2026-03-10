@@ -9,6 +9,7 @@ const config: Config = {
       colors: {
         background: "#21182F",
         "primary": "#312447",
+        "light-purple": "#A283C8",
         "border": "#3F2E5A",
         "inner": "#654D8C",
         "input": "#C7A6EF14",

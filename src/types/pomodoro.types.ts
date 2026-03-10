@@ -16,9 +16,15 @@ export interface StartPomodoroRequest {
   durationTime: number;
 }
 
-export interface PomodoroStatusResponse {
-  pomodoro: PomodoroSession | null;
-  hasActivePomodoro: boolean;
+export interface ActivePomodoroStatus {
+  pomodoroId: number;
+  secondsRemaining: number;
+  isFinished: boolean;
+  pomodoroStatus: PomodoroStatus;
+  skillName: string;
+  totalDurationMinutes: number;
+  expectedXp: number;
+  xpNotification: string | null;
 }
 
 export interface ValidationConstants {

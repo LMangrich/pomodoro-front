@@ -38,3 +38,6 @@ export const useSkills = () => {
 
   return { skills, isLoading, error, refetch: fetchSkills, calculateXp };
 };
+
+
+//todo - qnd fechar a tela, tb desiste do pomodoro

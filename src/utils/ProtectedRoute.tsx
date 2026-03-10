@@ -23,12 +23,10 @@ export const ProtectedRoute = ({
     }
   }, [isAuthenticated, isLoading, router, redirectTo]);
 
-  // Show loading splash while checking authentication
   if (isLoading) {
     return <LoadingSplash />;
   }
 
-  // Redirect if not authenticated
   if (!isAuthenticated) {
     return null;
   }

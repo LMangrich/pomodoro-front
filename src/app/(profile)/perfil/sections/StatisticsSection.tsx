@@ -1,5 +1,7 @@
 "use client";
 import { Button } from "@/src/components/Button/Button";
+import { cn } from "@/src/lib/utils";
+import { Calendar } from "lucide-react";
 import { useState } from "react";
 import { ComposedChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 
@@ -24,38 +26,44 @@ export const StatisticsSection = () => {
 
         <div className="border border-button-primary rounded-[20px] p-8">
 
-        {/* Tabs */}
-        <div className="flex gap-2 mb-12">
-          <Button
-            variant={activeTab === "semanal" ? "primary" : "secondary"}
-            onClick={() => setActiveTab("semanal")}
-            className="px-4 py-1.5 text-12 h-auto"
-          >
-            Semanal
-          </Button>
-          <Button
-            variant={activeTab === "mensal" ? "primary" : "secondary"}
-            onClick={() => setActiveTab("mensal")}
-            className="px-4 py-1.5 text-12 h-auto"
-          >
-            Mensal
-          </Button>
-          <Button
-            variant={activeTab === "anual" ? "primary" : "secondary"}
-            onClick={() => setActiveTab("anual")}
-            className="px-4 py-1.5 text-12 h-auto"
-          >
-            Anual
-          </Button>
-          <div className="ml-auto bg-button-primary text-background rounded-[8px] px-4 py-2 flex items-center gap-2">
-            <span className="text-16">📅</span>
-            <span className="text-16 font-bold">
+        <div className="flex flex-col sm:flex-row justify-between gap-5 mb-12">
+          <div className="max-w-[303px] sm:max-w-full grid grid-cols-3 gap-2 md:gap-5">
+            <Button
+              variant="primary"
+              onClick={() => setActiveTab("semanal")}
+              className={cn("max-w-[98px] border-none px-1 md:px-4 py-1.5 text-12 md:text-16 h-auto",
+                activeTab !== "semanal" && "bg-light-purple",
+              )}
+            >
+              Semanal
+            </Button>
+            <Button
+              variant="primary"
+              onClick={() => setActiveTab("mensal")}
+              className={cn("max-w-[98px] border-none  px-1 md:px-4 py-1.5 text-12 md:text-16 h-auto",
+                activeTab !== "mensal" && "bg-light-purple",
+              )}
+            >
+              Mensal
+            </Button>
+            <Button
+              variant="primary"
+              onClick={() => setActiveTab("anual")}
+              className={cn("max-w-[98px] border-none px-1 md:px-4 py-1.5 text-12 md:text-16 h-auto",
+                activeTab !== "anual" && "bg-light-purple",
+              )}
+            >
+              Anual
+            </Button>
+          </div>
+          <div className="mr-auto sm:mr-0 max-h-[40px] bg-button-primary text-background rounded-[8px] px-4 py-2 flex items-center gap-2">
+            <Calendar />
+            <span className="text-12 md:text-16 leading-tight font-bold">
               Semana 2 de Março, 2025
             </span>
           </div>
         </div>
 
-        {/* Chart */}
         <ResponsiveContainer width="100%" height={300}>
           <ComposedChart data={mockData} barCategoryGap={1}>
             <CartesianGrid strokeDasharray="3 3" stroke="#3F2E5A" />

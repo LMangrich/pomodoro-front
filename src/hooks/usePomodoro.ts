@@ -14,7 +14,7 @@ export const usePomodoro = () => {
   const fetchStatus = useCallback(async () => {
     try {
       const data = await pomodoroService.getStatus();
-      setActivePomodoro(data.hasActivePomodoro ? data.pomodoro : null);
+      setActivePomodoro(data ? { id: data.pomodoroId, skillId: 0, durationTime: data.totalDurationMinutes, status: data.pomodoroStatus, startedAt: '' } : null);
     } catch {
       // no active pomodoro or not authenticated yet
     }

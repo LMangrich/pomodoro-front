@@ -4,15 +4,10 @@ export interface UserData {
   name: string;
 }
 
-export interface AuthResponse {
-  accessToken: string;
-  user: UserData;
-}
-
 export interface UserSkill {
   id: number;
   skillName: string;
-  icon?: string;
+  emojString?: string;
   totalXp: number;
   currentLevel: number;
   xpForNextLevel: number;

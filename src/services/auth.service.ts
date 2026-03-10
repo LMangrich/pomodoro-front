@@ -1,5 +1,5 @@
-import { httpClient, clearToken } from '@/src/utils/httpClient';
-import type { AuthResponse, UserData } from '@/src/types/user.types';
+import { httpClient } from '@/src/utils/httpClient';
+import type { UserData } from '@/src/types/user.types';
 
 interface LoginRequest {
   username: string;
@@ -13,22 +13,22 @@ interface RegisterRequest {
   name: string;
 }
 
-interface CurrentUserResponse {
+interface AuthResponse {
+  message: string;
   user: UserData;
 }
 
 export const authService = {
   login: (data: LoginRequest) =>
-    httpClient.post<AuthResponse>('/api/auth/login', data),
+    httpClient.post<AuthResponse>('/api/gate/enter', data),
 
   register: (data: RegisterRequest) =>
-    httpClient.post<AuthResponse>('/api/auth/register', data),
+    httpClient.post<AuthResponse>('/api/onboarding/start', data),
 
   currentUser: () =>
-    httpClient.get<CurrentUserResponse>('/api/auth/current-user'),
+    httpClient.get<AuthResponse>('/api/session/current'),
 
   logout: async () => {
-    await httpClient.post('/api/auth/logout', {});
-    clearToken();
+    await httpClient.post('/api/session/end');
   },
 };

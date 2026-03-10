@@ -16,8 +16,12 @@ export const useAuth = () => {
     setError(null);
     try {
       const response = await authService.login({ username, password });
+      
+      if (!response.user) {
+        throw new Error('Invalid response from server: missing user data');
+      }
+
       setUserData(response.user);
-      localStorage.setItem('userData', JSON.stringify(response.user));
       router.push('/pomodoro');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Usuário ou senha inválidos');
@@ -36,8 +40,12 @@ export const useAuth = () => {
     setError(null);
     try {
       const response = await authService.register({ name, email, username, password });
+      
+      if (!response.user) {
+        throw new Error('Invalid response from server: missing user data');
+      }
+
       setUserData(response.user);
-      localStorage.setItem('userData', JSON.stringify(response.user));
       router.push('/pomodoro');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao criar conta');
@@ -48,7 +56,6 @@ export const useAuth = () => {
   const logout = async () => {
     await authService.logout();
     clearUserData();
-    localStorage.removeItem('userData');
     router.push('/login');
   };
 

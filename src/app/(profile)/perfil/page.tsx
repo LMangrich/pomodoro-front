@@ -11,7 +11,7 @@ export default function ProfilePage() {
   return (
     <ProtectedRoute>
       <HeaderSection />
-      <main>
+      <main className="px-5">
         <div className="max-w-xl md:max-w-5xl bg-primary border border-border rounded-[20px] mx-auto">
             <ProfileHeaderSection />
             <ProfileStatsSection />
