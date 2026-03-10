@@ -57,7 +57,27 @@ export async function proxyRequest(
   });
 
   backendRes.headers.forEach((value, key) => {
-    if (['transfer-encoding', 'connection'].includes(key.toLowerCase())) return;
+    const lowerKey = key.toLowerCase();
+    
+    if (['transfer-encoding', 'connection', 'content-encoding'].includes(lowerKey)) return;
+
+    if (lowerKey === 'location') {
+      try {
+        const locationUrl = new URL(value);
+        proxyRes.headers.set(key, `${locationUrl.pathname}${locationUrl.search}`);
+        return;
+      } catch (e) {
+        proxyRes.headers.set(key, value);
+        return;
+      }
+    }
+
+    if (lowerKey === 'set-cookie') {
+      const cleanCookie = value.replace(/Domain=[^;]+;?\s*/gi, '');
+      proxyRes.headers.append(key, cleanCookie);
+      return;
+    }
+
     proxyRes.headers.append(key, value);
   });
 
