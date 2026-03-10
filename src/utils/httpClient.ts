@@ -28,7 +28,7 @@ const request = async <T>(endpoint: string, options: CustomRequestInit = {}): Pr
   
   if (!text) {
     if (!response.ok) {
-      throw new Error(`Request failed with status ${response.status}: empty response`);
+      throw new Error('Ocorreu um erro');
     }
     return {} as T;
   }
@@ -37,14 +37,11 @@ const request = async <T>(endpoint: string, options: CustomRequestInit = {}): Pr
   try {
     data = JSON.parse(text);
   } catch (parseError) {
-    if (!response.ok) {
-      throw new Error(`Request failed: ${text}`);
-    }
-    throw new Error(`Invalid JSON response: ${text}`);
+    throw new Error('Ocorreu um erro');
   }
 
   if (!response.ok) {
-    throw new Error(data.message || data.error || `Request failed with status ${response.status}`);
+    throw new Error(data.message || data.error || 'Ocorreu um erro');
   }
 
   return data;
