@@ -203,8 +203,8 @@ export default function SignUpFormSection() {
                 onChange={(e) => handleFieldChange('username', e.target.value)}
                 onBlur={() => handleFieldBlur('username', username)}
                 error={fieldErrors.username}
-                pattern="^[a-zA-Z0-9_\-]{3,20}$"
-                title="Usuário deve conter apenas letras, números, hífens e underscores (3-20 caracteres)"
+                pattern="^[a-zA-Z0-9_\- ]{3,20}$"
+                title="Usuário deve conter apenas letras, números, espaços, hífens e underscores (3-20 caracteres)"
                 required
               />
 
