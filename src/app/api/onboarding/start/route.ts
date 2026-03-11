@@ -5,6 +5,7 @@ const BACKEND_URL = process.env.BACKEND_URL;
 export async function POST(req: NextRequest) {
   try {
     const body = await req.text();
+    console.log('[onboarding/start] BACKEND_URL:', BACKEND_URL);
     const res = await fetch(`${BACKEND_URL}/gambiarra/api/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...(req.headers.get('cookie') ? { Cookie: req.headers.get('cookie')! } : {}) },
@@ -15,7 +16,8 @@ export async function POST(req: NextRequest) {
     const setCookie = res.headers.get('set-cookie');
     if (setCookie) response.headers.set('set-cookie', setCookie);
     return response;
-  } catch {
+  } catch (err) {
+    console.error('[onboarding/start] fetch failed:', err);
     return NextResponse.json({ message: 'Ocorreu um erro' }, { status: 503 });
   }
 }
