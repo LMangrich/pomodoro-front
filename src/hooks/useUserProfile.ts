@@ -3,9 +3,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import { userService } from '@/src/services/user.service';
 import { skillService } from '@/src/services/skill.service';
+import { useUser } from '@/src/context/UserContext';
 import type { UserStats, UserSkill } from '@/src/types/user.types';
 
 export const useUserProfile = (username: string | null | undefined) => {
+  const { isAuthenticated, isLoading: isAuthLoading } = useUser();
   const [stats, setStats] = useState<UserStats | null>(null);
   const [skills, setSkills] = useState<UserSkill[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -36,8 +38,9 @@ export const useUserProfile = (username: string | null | undefined) => {
   }, [username]);
 
   useEffect(() => {
+    if (isAuthLoading || !isAuthenticated) return;
     fetchProfile();
-  }, [fetchProfile]);
+  }, [fetchProfile, isAuthenticated, isAuthLoading]);
 
   return { stats, skills, isLoading, error, refetch: fetchProfile };
 };

@@ -1,10 +1,23 @@
-import { NextRequest } from 'next/server';
-import { proxyRequest } from '@/src/app/api/_proxy';
+import { NextRequest, NextResponse } from 'next/server';
+
+const BACKEND_URL = process.env.BACKEND_URL;
 
 export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const { id } = await params;
-  return proxyRequest(req, `/gambiarra/api/pomodoros/${id}/abandon`);
+  try {
+    const { id } = await params;
+    const res = await fetch(`${BACKEND_URL}/gambiarra/api/pomodoros/${id}/abandon`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', ...(req.headers.get('cookie') ? { Cookie: req.headers.get('cookie')! } : {}) },
+    });
+    const text = await res.text();
+    const response = new NextResponse(text || null, { status: res.status });
+    const setCookie = res.headers.get('set-cookie');
+    if (setCookie) response.headers.set('set-cookie', setCookie);
+    return response;
+  } catch {
+    return NextResponse.json({ message: 'Ocorreu um erro' }, { status: 503 });
+  }
 }

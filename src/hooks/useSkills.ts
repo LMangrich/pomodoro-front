@@ -2,9 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { skillService } from '@/src/services/skill.service';
+import { useUser } from '@/src/context/UserContext';
 import type { Skill } from '@/src/types/skill.types';
 
 export const useSkills = () => {
+  const { isAuthenticated, isLoading: isAuthLoading } = useUser();
   const [skills, setSkills] = useState<Skill[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -24,8 +26,9 @@ export const useSkills = () => {
   };
 
   useEffect(() => {
+    if (isAuthLoading || !isAuthenticated) return;
     fetchSkills();
-  }, []);
+  }, [isAuthenticated, isAuthLoading]);
 
   const calculateXp = async (skillId: number, durationMinutes: number) => {
     try {
