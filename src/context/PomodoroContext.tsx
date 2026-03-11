@@ -11,6 +11,7 @@ import {
 } from "react";
 import { pomodoroService } from "@/src/services/pomodoro.service";
 import { skillService } from "@/src/services/skill.service";
+import { useUser } from "@/src/context/UserContext";
 import type { ActivePomodoroStatus, ValidationConstants } from "@/src/types/pomodoro.types";
 
 interface PomodoroContextType {
@@ -30,6 +31,7 @@ interface PomodoroContextType {
 const PomodoroContext = createContext<PomodoroContextType | undefined>(undefined);
 
 export const PomodoroProvider = ({ children }: { children: ReactNode }) => {
+  const { isAuthenticated, isLoading: isAuthLoading } = useUser();
   const [status, setStatus] = useState<ActivePomodoroStatus | null>(null);
   const [secondsRemaining, setSecondsRemaining] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
@@ -126,9 +128,9 @@ export const PomodoroProvider = ({ children }: { children: ReactNode }) => {
   // Boot
 
   useEffect(() => {
+    if (isAuthLoading || !isAuthenticated) return;
     let cancelled = false;
     async function boot() {
-      // Build the emoji map FIRST so syncStatus can look up icons immediately
       const [consts, allSkills] = await Promise.all([
         pomodoroService.getValidationConstants().catch(() => null),
         skillService.listAll().catch(() => []),
@@ -136,14 +138,13 @@ export const PomodoroProvider = ({ children }: { children: ReactNode }) => {
       if (cancelled) return;
       if (consts) setConstants(consts);
       emojiMapRef.current = new Map(allSkills.map((s) => [s.name.toLowerCase(), s.emojString ?? "📚"]));
-      // Now sync — the map is ready, so skill emoji will resolve correctly
       await syncStatus();
       if (cancelled) return;
       setIsLoading(false);
     }
     boot();
     return () => { cancelled = true; };
-  }, [syncStatus]);
+  }, [isAuthenticated, isAuthLoading, syncStatus]);
 
   // Cleanup on unmount
 

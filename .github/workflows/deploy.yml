@@ -23,14 +23,14 @@ jobs:
         run: npm ci
 
       - name: Create .env file
-        run: echo "${{ secrets.ENV_FRONTEND }}" > .env.local
+        run: echo "${{ secrets.ENV_FRONTEND }}" > .env
 
       - name: Build Next.js app
         run: npm run build
 
       - name: Compress files
         run: |
-          tar -czf deploy.tar.gz .next .env.local public package.json package-lock.json next.config.ts tsconfig.json tailwind.config.ts postcss.config.mjs
+          tar -czf deploy.tar.gz .next .env public package.json package-lock.json next.config.ts tsconfig.json tailwind.config.ts postcss.config.mjs
 
       - name: Copy project files to server
         uses: appleboy/scp-action@master
