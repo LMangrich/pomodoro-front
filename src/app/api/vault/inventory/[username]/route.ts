@@ -6,5 +6,5 @@ export async function GET(
   { params }: { params: Promise<{ username: string }> },
 ) {
   const { username } = await params;
-  return proxyRequest(req, `/api/user/${username}/skills`);
+  return proxyRequest(req, `/gambiarra/api/user/${username}/skills`);
 }

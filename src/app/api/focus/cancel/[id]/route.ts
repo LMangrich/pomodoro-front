@@ -6,5 +6,5 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
-  return proxyRequest(req, `/api/pomodoros/${id}/abandon`);
+  return proxyRequest(req, `/gambiarra/api/pomodoros/${id}/abandon`);
 }

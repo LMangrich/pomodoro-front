@@ -3,30 +3,34 @@
 import { useState, useEffect, useCallback } from 'react';
 import { pomodoroService } from '@/src/services/pomodoro.service';
 import { skillService } from '@/src/services/skill.service';
+import { useUser } from '@/src/context/UserContext';
 import type { PomodoroSession, ValidationConstants } from '@/src/types/pomodoro.types';
 
 export const usePomodoro = () => {
+  const { isAuthenticated, isLoading: isAuthLoading } = useUser();
   const [activePomodoro, setActivePomodoro] = useState<PomodoroSession | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [constants, setConstants] = useState<ValidationConstants | null>(null);
 
   const fetchStatus = useCallback(async () => {
+    if (!isAuthenticated) return;
     try {
       const data = await pomodoroService.getStatus();
       setActivePomodoro(data ? { id: data.pomodoroId, skillId: 0, durationTime: data.totalDurationMinutes, status: data.pomodoroStatus, startedAt: '' } : null);
     } catch {
-      // no active pomodoro or not authenticated yet
+      // no active pomodoro
     }
-  }, []);
+  }, [isAuthenticated]);
 
   useEffect(() => {
+    if (isAuthLoading || !isAuthenticated) return;
     pomodoroService
       .getValidationConstants()
       .then(setConstants)
       .catch(() => {});
     fetchStatus();
-  }, [fetchStatus]);
+  }, [isAuthenticated, isAuthLoading, fetchStatus]);
 
   const startPomodoro = async (skillId: number, durationTime: number) => {
     console.log('[usePomodoro] startPomodoro called with:', { skillId, durationTime });
