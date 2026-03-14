@@ -5,7 +5,7 @@ const BACKEND_URL = process.env.BACKEND_URL;
 export async function POST(req: NextRequest) {
   try {
     const body = await req.text();
-    const res = await fetch(`${BACKEND_URL}/gambiarra/api/pomodoros/start`, {
+    const res = await fetch(`${BACKEND_URL}/api/pomodoros/start`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...(req.headers.get('cookie') ? { Cookie: req.headers.get('cookie')! } : {}) },
       body,

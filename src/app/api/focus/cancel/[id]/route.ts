@@ -8,7 +8,7 @@ export async function PUT(
 ) {
   try {
     const { id } = await params;
-    const res = await fetch(`${BACKEND_URL}/gambiarra/api/pomodoros/${id}/abandon`, {
+    const res = await fetch(`${BACKEND_URL}/api/pomodoros/${id}/abandon`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json', ...(req.headers.get('cookie') ? { Cookie: req.headers.get('cookie')! } : {}) },
     });

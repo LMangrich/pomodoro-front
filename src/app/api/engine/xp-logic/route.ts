@@ -5,7 +5,7 @@ const BACKEND_URL = process.env.BACKEND_URL;
 export async function GET(req: NextRequest) {
   try {
     const query = req.nextUrl.searchParams.toString();
-    const url = `${BACKEND_URL}/gambiarra/api/skill/calculate-xp${query ? `?${query}` : ''}`;
+    const url = `${BACKEND_URL}/api/skill/calculate-xp${query ? `?${query}` : ''}`;
     const res = await fetch(url, {
       method: 'GET',
       headers: { 'Content-Type': 'application/json', ...(req.headers.get('cookie') ? { Cookie: req.headers.get('cookie')! } : {}) },

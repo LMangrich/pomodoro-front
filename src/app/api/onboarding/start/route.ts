@@ -6,7 +6,7 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.text();
     console.log('[onboarding/start] BACKEND_URL:', BACKEND_URL);
-    const res = await fetch(`${BACKEND_URL}/gambiarra/api/auth/register`, {
+    const res = await fetch(`${BACKEND_URL}/api/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...(req.headers.get('cookie') ? { Cookie: req.headers.get('cookie')! } : {}) },
       body,

@@ -8,7 +8,7 @@ export async function GET(
 ) {
   try {
     const { username } = await params;
-    const res = await fetch(`${BACKEND_URL}/gambiarra/api/user/${username}/skills`, {
+    const res = await fetch(`${BACKEND_URL}/api/user/${username}/skills`, {
       method: 'GET',
       headers: { 'Content-Type': 'application/json', ...(req.headers.get('cookie') ? { Cookie: req.headers.get('cookie')! } : {}) },
     });
