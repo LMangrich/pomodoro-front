@@ -70,6 +70,8 @@ export const PomodoroProvider = ({ children }: { children: ReactNode }) => {
   }, [stopTick]);
 
   const syncStatus = useCallback(async () => {
+    if (isAuthLoading || !isAuthenticated) return;
+
     try {
       const requestedAt = Date.now();
       const data = await pomodoroService.getStatus();
@@ -107,7 +109,7 @@ export const PomodoroProvider = ({ children }: { children: ReactNode }) => {
       completionTimerRef.current = setTimeout(() => {
         console.log('[Pomodoro] completion timer fired');
         const last = lastStatusRef.current;
-        if (!last) return;
+        if (!last || !isAuthenticated) return;
         stopTick();
         setIsRunning(false);
         setIsFinished(true);
@@ -119,7 +121,7 @@ export const PomodoroProvider = ({ children }: { children: ReactNode }) => {
       }, msRemaining);
     } catch {
     }
-  }, [startTick, stopTick, clearCompletionTimer]);
+  }, [startTick, stopTick, clearCompletionTimer, isAuthenticated, isAuthLoading]);
 
   useEffect(() => {
     syncStatusRef.current = syncStatus;

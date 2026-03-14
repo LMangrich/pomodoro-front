@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import ChooseSkillModal from "../components/Modal/ChooseSkillModal";
 import { usePomodoro } from "@/src/context/PomodoroContext";
 import { pomodoroService } from "@/src/services/pomodoro.service";
@@ -21,39 +21,132 @@ export default function PomodoroTimerSection() {
     abandon,
   } = usePomodoro();
 
+  const minDuration = constants?.minDuration ?? 1;
+  const maxDuration = constants?.maxDuration ?? 120;
   const defaultDuration = constants?.defaultDuration ?? 25;
-  const totalSeconds = (status?.totalDurationMinutes ?? defaultDuration) * 60;
+  const durationStepMinutes = 5;
+  const minDurationSeconds = minDuration * 60;
+  const maxDurationSeconds = maxDuration * 60;
+  const defaultDurationSeconds = defaultDuration * 60;
+  const durationStepSeconds = durationStepMinutes * 60;
+  const [durationOverride, setDurationOverride] = useState<number | null>(null);
+  const [durationDraft, setDurationDraft] = useState<string | null>(null);
+  const durationSeconds = durationOverride ?? defaultDurationSeconds;
+  const durationMinutes = durationSeconds / 60;
 
-  const displayMinutes = isRunning ? Math.floor(secondsRemaining / 60) : defaultDuration;
-  const displaySeconds = isRunning ? secondsRemaining % 60 : 0;
+  const totalSeconds = status ? status.totalDurationMinutes * 60 : durationSeconds;
+
+  const displayMinutes = isRunning ? Math.floor(secondsRemaining / 60) : Math.floor(durationSeconds / 60);
+  const displaySeconds = isRunning ? secondsRemaining % 60 : durationSeconds % 60;
 
   const [selectedSkill, setSelectedSkill] = useState<Skill | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [previewXp, setPreviewXp] = useState<number | null>(null);
+  const minutesInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     if (!selectedSkill || isRunning) return;
     let cancelled = false;
-    skillService.calculateXp(selectedSkill.id, defaultDuration)
+    skillService.calculateXp(selectedSkill.id, durationMinutes)
       .then((res) => { if (!cancelled) setPreviewXp(res.expectedXp); })
       .catch(() => { if (!cancelled) setPreviewXp(null); });
     return () => { cancelled = true; };
-  }, [selectedSkill, defaultDuration, isRunning]);
+  }, [selectedSkill, durationMinutes, isRunning]);
 
   const formatTime = (mins: number, secs: number) =>
     `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+
+  const getDurationDraftParts = () => {
+    const baseDraft = durationDraft ?? formatTime(Math.floor(durationSeconds / 60), durationSeconds % 60);
+    const [minutesPart = "", secondsPart = ""] = baseDraft.split(":");
+
+    return {
+      minutesPart,
+      secondsPart,
+    };
+  };
+
+  const updateDurationDraftPart = (rawValue: string) => {
+    const { secondsPart } = getDurationDraftParts();
+    const sanitizedValue = rawValue.replace(/\D/g, "").slice(0, 3);
+    setDurationDraft(`${sanitizedValue}:${secondsPart || "00"}`);
+  };
+
+  const parseDurationInput = (value: string) => {
+    const trimmedValue = value.trim();
+
+    if (!trimmedValue) return defaultDurationSeconds;
+
+    const onlyDigits = trimmedValue.replace(/\D/g, "");
+
+    if (!onlyDigits) return durationSeconds;
+
+    let minutes = 0;
+    let seconds = 0;
+
+    if (trimmedValue.includes(":")) {
+      const [minutesPart = "0", secondsPart = "0"] = trimmedValue.split(":");
+      minutes = Number.parseInt(minutesPart.replace(/\D/g, "") || "0", 10);
+      seconds = Number.parseInt(secondsPart.replace(/\D/g, "") || "0", 10);
+    } else if (onlyDigits.length <= 3) {
+      minutes = Number.parseInt(onlyDigits, 10);
+    } else {
+      minutes = Number.parseInt(onlyDigits.slice(0, -2), 10);
+      seconds = Number.parseInt(onlyDigits.slice(-2), 10);
+    }
+
+    const rawSeconds = (minutes * 60) + seconds;
+    const clampedSeconds = Math.min(maxDurationSeconds, Math.max(minDurationSeconds, rawSeconds));
+    const normalizedSeconds = Math.round(clampedSeconds / durationStepSeconds) * durationStepSeconds;
+
+    return Math.min(maxDurationSeconds, Math.max(minDurationSeconds, normalizedSeconds));
+  };
+
+  const commitDurationInput = () => {
+    const nextDuration = parseDurationInput(durationDraft ?? formatTime(Math.floor(durationSeconds / 60), durationSeconds % 60));
+    setDurationOverride(nextDuration);
+    setDurationDraft(formatTime(Math.floor(nextDuration / 60), nextDuration % 60));
+  };
+
+  const focusMinutesInput = () => {
+    if (isRunning) return;
+    const input = minutesInputRef.current;
+    if (!input) return;
+
+    input.focus();
+    const cursorPosition = input.value.length;
+    input.setSelectionRange(cursorPosition, cursorPosition);
+  };
 
   const handleStart = async () => {
     if (!selectedSkill) return;
     try {
       await pomodoroService.start({
         skillId: selectedSkill.id,
-        durationTime: defaultDuration,
+        durationTime: durationMinutes,
       });
       notifyStarted((selectedSkill as (typeof selectedSkill & { emojString?: string })).emojString);
     } catch (err) {
       alert(`Erro ao iniciar pomodoro: ${err instanceof Error ? err.message : "Desconhecido"}`);
     }
+  };
+
+  const handleIncreaseDuration = () => {
+    if (isRunning) return;
+    setDurationDraft(null);
+    setDurationOverride((prev) => {
+      const current = prev ?? defaultDurationSeconds;
+      return Math.min(maxDurationSeconds, current + (5 * 60));
+    });
+  };
+
+  const handleDecreaseDuration = () => {
+    if (isRunning) return;
+    setDurationDraft(null);
+    setDurationOverride((prev) => {
+      const current = prev ?? defaultDurationSeconds;
+      return Math.max(minDurationSeconds, current - (5 * 60));
+    });
   };
 
   const handleAbandon = async () => {
@@ -76,6 +169,7 @@ export default function PomodoroTimerSection() {
 
   const expectedXp = isRunning ? (status?.expectedXp ?? 0) : (previewXp ?? 0);
   const activeSkillName = status?.skillName ?? selectedSkill?.name ?? "";
+  const { minutesPart, secondsPart } = getDurationDraftParts();
 
   return (
     <>
@@ -84,12 +178,12 @@ export default function PomodoroTimerSection() {
         onClose={() => setIsModalOpen(false)}
         onChooseSkill={handleChooseSkill}
       />
-      <section className="flex flex-col items-center gap-12">
-        <div className="w-full max-w-[623px] bg-primary border border-border rounded-[20px] p-8 flex flex-col items-center gap-10">
-          <div className="flex flex-row w-full justify-center gap-5">
+      <section className="flex flex-col items-center gap-12 w-full">
+        <div className="w-full max-w-[623px] bg-primary border border-border rounded-[20px] px-8 py-7 flex flex-col items-center gap-8 shadow-[0_10px_30px_rgba(0,0,0,0.25)]">
+          <div className="flex flex-row w-full justify-center gap-4">
             <Button
               variant="primary"
-              className={cn("px-6 py-2 text-14 hover:opacity-100 border-none transition-colors")}
+              className={cn("px-7 py-2 text-14 hover:opacity-100 border-none transition-colors")}
             >
               Pomodoro
             </Button>
@@ -101,8 +195,63 @@ export default function PomodoroTimerSection() {
             </Button>
           </div>
 
-          <div className="text-off-white text-[96px] font-bold leading-none tracking-tight w-full text-center">
-            {formatTime(displayMinutes, displaySeconds)}
+          <div className="w-full flex items-center justify-center  gap-4">
+            <div
+              className={cn(" w-full border rounded-[12px] px-10 py-3 min-w-[290px] text-center",
+                isRunning ? "border-transparent" : "border-dashed border-button-primary/70",
+              )}
+              onClick={focusMinutesInput}
+            >
+              {isRunning ? (
+                <div className="text-off-white text-[96px] font-bold leading-none tracking-tight select-none">
+                  {formatTime(displayMinutes, displaySeconds)}
+                </div>
+              ) : (
+                <div className="w-full flex items-center justify-center gap-3 text-off-white text-[96px] font-bold leading-none tracking-tight">
+                  <input
+                    ref={minutesInputRef}
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={3}
+                    value={minutesPart}
+                    onChange={(event) => {
+                      updateDurationDraftPart(event.target.value);
+                    }}
+                    onBlur={commitDurationInput}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter") {
+                        event.currentTarget.blur();
+                      }
+                    }}
+                    className="w-[180px] bg-transparent text-right text-off-white text-[96px] font-bold leading-none tracking-tight outline-none"
+                    aria-label="Minutos do pomodoro"
+                  />
+                  <span aria-hidden="true">:</span>
+                  <span className="w-[120px] bg-transparent text-left text-off-white text-[96px] font-bold leading-none tracking-tight">
+                    {secondsPart}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <Button
+                variant="primary"
+                onClick={handleIncreaseDuration}
+                disabled={isRunning || durationSeconds >= maxDurationSeconds}
+                aria-label="Aumentar tempo"
+              >
+                +
+              </Button>
+              <Button
+                variant="primary"
+                onClick={handleDecreaseDuration}
+                disabled={isRunning || durationSeconds <= minDurationSeconds}
+                aria-label="Diminuir tempo"
+              >
+                -
+              </Button>
+            </div>
           </div>
 
           <div className="w-full h-2 bg-border rounded-full overflow-hidden">
@@ -116,7 +265,7 @@ export default function PomodoroTimerSection() {
             <Button
               variant="primary"
               onClick={handleAbandon}
-              className="w-full"
+              className="w-full h-[56px]"
             >
               ABANDONAR
             </Button>
@@ -125,7 +274,7 @@ export default function PomodoroTimerSection() {
               variant="primary"
               onClick={handleStart}
               disabled={!selectedSkill}
-              className={cn("w-full", !selectedSkill && "opacity-50 cursor-not-allowed")}
+              className={cn("w-full h-[56px]", !selectedSkill && "opacity-50 cursor-not-allowed")}
             >
               COMEÇAR
             </Button>
