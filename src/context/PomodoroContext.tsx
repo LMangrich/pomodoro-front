@@ -155,26 +155,6 @@ export const PomodoroProvider = ({ children }: { children: ReactNode }) => {
     };
   }, [stopTick, clearCompletionTimer]);
 
-  // Abandon on tab/window close — keepalive ensures the request survives page unload
-  const statusRef = useRef<ActivePomodoroStatus | null>(null);
-  useEffect(() => {
-    statusRef.current = status;
-  }, [status]);
-
-  useEffect(() => {
-    const handleBeforeUnload = () => {
-      const current = statusRef.current;
-      if (!current) return;
-      fetch(`/api/pomodoros/${current.pomodoroId}/abandon`, {
-        method: 'PUT',
-        keepalive: true,
-        credentials: 'include',
-      });
-    };
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, []);
-
   // Actions
 
   const notifyStarted = useCallback((emoji?: string) => {

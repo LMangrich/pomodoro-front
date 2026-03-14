@@ -5,6 +5,7 @@ import { UserProvider } from "@/src/context/UserContext";
 import { PomodoroProvider } from "@/src/context/PomodoroContext";
 import { AuthChecker } from "@/src/components/AuthChecker/AuthChecker";
 import PomodoroCompleteToast from "@/src/components/PomodoroCompleteToast/PomodoroCompleteToast";
+import { PomodoroTitleUpdater } from "@/src/components/PomodoroTitleUpdater/PomodoroTitleUpdater";
 
 const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
@@ -27,6 +28,7 @@ export default function RootLayout({
       <body className={`${spaceGrotesk.variable} antialiased`}>
         <UserProvider>
           <PomodoroProvider>
+            <PomodoroTitleUpdater />
             <AuthChecker>
               {children}
             </AuthChecker>
