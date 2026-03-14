@@ -8,17 +8,17 @@ import type {
 
 export const pomodoroService = {
   start: (data: StartPomodoroRequest) =>
-    httpClient.post<PomodoroSession>('/api/focus/initiate', data),
+    httpClient.post<PomodoroSession>('/api/pomodoros/start', data),
 
   abandon: (pomodoroId: number) =>
-    httpClient.put<void>(`/api/focus/cancel/${pomodoroId}`),
+    httpClient.put<void>(`/api/pomodoros/${pomodoroId}/abandon`),
 
   getStatus: async (): Promise<ActivePomodoroStatus | null> => {
-    const data = await httpClient.get<ActivePomodoroStatus | Record<string, never>>('/api/focus/state');
+    const data = await httpClient.get<ActivePomodoroStatus | Record<string, never>>('/api/pomodoros/status');
     if (!data || !('pomodoroId' in data)) return null;
     return data as ActivePomodoroStatus;
   },
 
   getValidationConstants: () =>
-    httpClient.get<ValidationConstants>('/api/growth/estimate'),
+    httpClient.get<ValidationConstants>('/api/pomodoros/validation-constants'),
 };

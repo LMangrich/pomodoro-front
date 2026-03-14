@@ -165,7 +165,7 @@ export const PomodoroProvider = ({ children }: { children: ReactNode }) => {
     const handleBeforeUnload = () => {
       const current = statusRef.current;
       if (!current) return;
-      fetch(`/api/focus/cancel/${current.pomodoroId}`, {
+      fetch(`/api/pomodoros/${current.pomodoroId}/abandon`, {
         method: 'PUT',
         keepalive: true,
         credentials: 'include',

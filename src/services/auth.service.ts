@@ -20,15 +20,15 @@ interface AuthResponse {
 
 export const authService = {
   login: (data: LoginRequest) =>
-    httpClient.post<AuthResponse>('/api/gate/enter', data),
+    httpClient.post<AuthResponse>('/api/auth/login', data),
 
   register: (data: RegisterRequest) =>
-    httpClient.post<AuthResponse>('/api/onboarding/start', data),
+    httpClient.post<AuthResponse>('/api/auth/register', data),
 
   currentUser: () =>
-    httpClient.get<AuthResponse>('/api/session/current'),
+    httpClient.get<AuthResponse>('/api/auth/current-user'),
 
   logout: async () => {
-    await httpClient.post('/api/session/end');
+    await httpClient.post('/api/auth/logout');
   },
 };
