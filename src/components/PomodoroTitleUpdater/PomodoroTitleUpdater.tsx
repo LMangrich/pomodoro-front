@@ -17,7 +17,7 @@ export const PomodoroTitleUpdater = () => {
 
   useEffect(() => {
     if (isRunning) {
-      document.title = `${BASE_TITLE} ${formatTime(secondsRemaining)}`;
+      document.title = `${formatTime(secondsRemaining)} ${BASE_TITLE}`;
       return;
     }
 
