@@ -59,7 +59,7 @@ import { cn } from "@/src/lib/utils";;
 
 export default function Footer() {
   return (
-    <footer className="bg-[#1A1425] mt-[120px]">
+    <footer className="bg-[#1A1425] mt-[120px] self-bottom">
       <div className={cn("max-w-5xl mx-auto px-4 py-16")}>
           <div className="max-w-md flex flex-col items-center mx-auto gap-4 mb-6">
             <div className="flex flex-row items-center gap-2">

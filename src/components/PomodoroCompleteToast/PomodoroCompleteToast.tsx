@@ -1,18 +1,23 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { usePomodoro } from "@/src/context/PomodoroContext";
+import { useUser } from "@/src/context/UserContext";
+import { userService } from "@/src/services/user.service";
 import { Button } from "@/src/components/Button/Button";
 import { RayIcon } from "@/src/components/Icon/Icon";
 import { ClockIcon } from "lucide-react";
 import { playNotificationSound } from "@/src/utils/audioNotification";
+import type { UserSkill } from "@/src/types/user.types";
 
 
 export default function PomodoroCompleteToast() {
   const router = useRouter();
   const pathname = usePathname();
-  const { isFinished, isLoading, status, skillEmoji, clearStatus, syncStatus } = usePomodoro();
+  const { isFinished, isLoading, status, skillEmoji, clearStatus, syncStatus, setTimerMode } = usePomodoro();
+  const { userData } = useUser();
+  const [skillData, setSkillData] = useState<UserSkill | null>(null);
 
   useEffect(() => {
     syncStatus();
@@ -20,6 +25,23 @@ export default function PomodoroCompleteToast() {
   }, [pathname]);
 
   const isOpen = !isLoading && isFinished && !!status;
+
+  // Fetch skill data when status becomes available
+  useEffect(() => {
+    if (isOpen && status && userData) {
+      userService
+        .getSkills(userData.username)
+        .then((skills) => {
+          const skill = skills.find(s => s.skillName === status.skillName);
+          if (skill) {
+            setSkillData(skill);
+          }
+        })
+        .catch(() => {
+          setSkillData(null);
+        });
+    }
+  }, [isOpen, status, userData]);
 
   // Play sound once when modal becomes visible
   useEffect(() => {
@@ -29,6 +51,7 @@ export default function PomodoroCompleteToast() {
   if (!isOpen || !status) return null;
 
   const handleStartNew = () => {
+    setTimerMode("descanso");
     clearStatus();
     router.push("/pomodoro");
   };
@@ -51,15 +74,39 @@ export default function PomodoroCompleteToast() {
         </div>
 
         <div className="w-full border-2 border-button-primary rounded-[20px] px-6 py-5">
-          <div className="flex items-center justify-between mb-5">
-            <div className="flex items-center gap-2">
-              <span className="text-16">{skillEmoji}</span>
-              <span className="text-off-white text-16 md:text-20 font-bold">
-                {status.skillName}
-              </span>
-            </div>
-            <div className="bg-button-primary text-background px-3 py-1.5 rounded-[8px] text-14 md:text-16 font-bold whitespace-nowrap flex items-center gap-1">
-              <RayIcon className="w-4 h-4" /> {xpEarned} XP
+          <div className="flex items-start gap-3 md:gap-4">
+            <div className="w-full flex flex-col gap-4">
+              <div className="flex flex-row gap-3 md:gap-4 justify-between">
+                <div className="flex flex-row items-center gap-3 md:gap-4">
+                  <div className="flex-shrink-0">
+                    <span className="text-20 md:text-24">{skillEmoji}</span>
+                  </div>
+                  <h3 className="text-off-white text-14 md:text-16 font-bold truncate">
+                    {status.skillName}
+                  </h3>
+                </div>
+                <div className="bg-button-primary text-background px-3 py-1.5 rounded-[8px] text-12 md:text-14 font-bold whitespace-nowrap flex items-center gap-1 flex-shrink-0">
+                  <RayIcon className="w-4 h-4" /> {xpEarned} XP
+                </div>
+              </div>
+              {skillData && (
+                <div className="flex flex-row items-center gap-2">
+                    <div className="text-off-white flex-shrink-0 text-12 md:text-14 font-bold ">
+                      {skillData.totalXp} XP
+                    </div>
+                  <div className="flex flex-row items-center gap-2 md:gap-4 w-full">
+                    <div className="flex-1 h-2 bg-border rounded-full overflow-hidden min-w-0">
+                      <div
+                        className="h-full bg-button-primary rounded-full"
+                        style={{ width: `${Math.min(100, (skillData.xpNeededForNextLevel > 0 ? ((skillData.xpForNextLevel - skillData.xpNeededForNextLevel) / skillData.xpForNextLevel) * 100 : 100))}%` }}
+                      />
+                    </div>
+                    <span className="text-off-white text-12 md:text-14 font-bold whitespace-nowrap">
+                      NV. {skillData.currentLevel}
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

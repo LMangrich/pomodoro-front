@@ -12,23 +12,24 @@ import { Button } from "@/src/components/Button/Button";
 import Pagination from "@/src/components/Pagination/Pagination";
 
 const SKILLS_PER_PAGE = 6;
-const DEFAULT_DURATION = 25; // Default pomodoro duration
 
 interface ChooseSkillModalProps {
   isOpen: boolean;
   onClose: () => void;
   onChooseSkill: (skill: Skill) => void;
+  durationMinutes?: number;
 }
 
 export default function ChooseSkillModal({
   isOpen,
   onClose,
   onChooseSkill,
+  durationMinutes = 25,
 }: ChooseSkillModalProps) {
   const { skills, isLoading, error } = useSkills();
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
-  const [skillXpMap, setSkillXpMap] = useState<Record<number, number>>({});
+  const [skillXpMap, setSkillXpMap] = useState<Record<string, number>>({});
 
   const filtered = useMemo(
     () =>
@@ -46,24 +47,25 @@ export default function ChooseSkillModal({
 
   useEffect(() => {
     paginated.forEach((skill) => {
-      if (!skillXpMap[skill.id]) {
+      const cacheKey = `${skill.id}_${durationMinutes}`;
+      if (!skillXpMap[cacheKey]) {
         skillService
-          .calculateXp(skill.id, DEFAULT_DURATION)
+          .calculateXp(skill.id, durationMinutes)
           .then((result) => {
             setSkillXpMap((prev) => ({
               ...prev,
-              [skill.id]: result.expectedXp,
+              [cacheKey]: result.expectedXp,
             }));
           })
           .catch(() => {
             setSkillXpMap((prev) => ({
               ...prev,
-              [skill.id]: 0,
+              [cacheKey]: 0,
             }));
           });
       }
     });
-  }, [paginated, skillXpMap]);
+  }, [paginated, skillXpMap, durationMinutes]);
 
   if (!isOpen) return null;
 
@@ -137,7 +139,7 @@ export default function ChooseSkillModal({
                   <span className="flex flex-row items-center gap-2 text-off-white text-12 md:text-14 font-medium ">
                       Você receberá:
                       <div className="bg-button-primary text-background px-2.5 py-1 rounded-[8px] text-11 md:text-12 font-bold whitespace-nowrap flex items-center gap-1">
-                        <RayIcon className="w-3 h-3" />  {skillXpMap[skill.id] ?? "..."} XP
+                        <RayIcon className="w-3 h-3" />  {skillXpMap[`${skill.id}_${durationMinutes}`] ?? "..."} XP
                       </div>
                   </span>
                 </div>

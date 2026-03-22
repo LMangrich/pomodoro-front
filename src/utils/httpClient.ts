@@ -19,7 +19,19 @@ const request = async <T>(endpoint: string, options: CustomRequestInit = {}): Pr
   const response = await fetch(url, config);
 
   if (response.status === 401) {
-    throw new Error('Session expired');
+    const text = await response.text();
+    let errorMessage = 'Sessão expirada';
+    
+    if (text) {
+      try {
+        const data = JSON.parse(text);
+        errorMessage = data.message || data.error || errorMessage;
+      } catch {
+        // Keep the default error message if JSON parsing fails
+      }
+    }
+    
+    throw new Error(errorMessage);
   }
 
   if (response.status === 204) return {} as T;
@@ -36,7 +48,7 @@ const request = async <T>(endpoint: string, options: CustomRequestInit = {}): Pr
   let data;
   try {
     data = JSON.parse(text);
-  } catch (parseError) {
+  } catch {
     throw new Error('Ocorreu um erro');
   }
 

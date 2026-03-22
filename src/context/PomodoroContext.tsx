@@ -13,6 +13,17 @@ import { pomodoroService } from "@/src/services/pomodoro.service";
 import { skillService } from "@/src/services/skill.service";
 import { useUser } from "@/src/context/UserContext";
 import type { ActivePomodoroStatus, ValidationConstants } from "@/src/types/pomodoro.types";
+import {
+  getInitialTimerMode,
+  isDescansoActive as checkDescansoActive,
+  isPomodoroActive as checkPomodoroActive,
+  getSavedDescansoData,
+  saveDescansoData,
+  clearDescansoData,
+  useStopTick,
+  useClearCompletionTimer,
+  useStartTick,
+} from "@/src/utils/pomodoroHelpers";
 
 interface PomodoroContextType {
   status: ActivePomodoroStatus | null;
@@ -26,6 +37,11 @@ interface PomodoroContextType {
   abandon: () => Promise<void>;
   clearStatus: () => void;
   syncStatus: () => Promise<void>;
+  timerMode: "pomodoro" | "descanso";
+  setTimerMode: (mode: "pomodoro" | "descanso") => void;
+  startDescansoTimer: (durationSeconds: number) => void;
+  isDescansoActive: () => boolean;
+  isPomodoroActive: () => boolean;
 }
 
 const PomodoroContext = createContext<PomodoroContextType | undefined>(undefined);
@@ -39,6 +55,8 @@ export const PomodoroProvider = ({ children }: { children: ReactNode }) => {
   const [skillEmoji, setSkillEmoji] = useState("📚");
   const [constants, setConstants] = useState<ValidationConstants | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [timerMode, setTimerMode] = useState<"pomodoro" | "descanso">(getInitialTimerMode());
+  const [descansoActive, setDescansoActive] = useState(checkDescansoActive());
 
   const tickRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const completionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -46,31 +64,16 @@ export const PomodoroProvider = ({ children }: { children: ReactNode }) => {
   const emojiMapRef = useRef<Map<string, string>>(new Map());
   const lastStatusRef = useRef<ActivePomodoroStatus | null>(null);
 
-  // Helpers
-
-  const stopTick = useCallback(() => {
-    if (tickRef.current) {
-      clearInterval(tickRef.current);
-      tickRef.current = null;
-    }
-  }, []);
-
-  const clearCompletionTimer = useCallback(() => {
-    if (completionTimerRef.current) {
-      clearTimeout(completionTimerRef.current);
-      completionTimerRef.current = null;
-    }
-  }, []);
-
-  const startTick = useCallback(() => {
-    stopTick();
-    tickRef.current = setInterval(() => {
-      setSecondsRemaining((prev) => Math.max(0, prev - 1));
-    }, 1000);
-  }, [stopTick]);
+  const stopTick = useStopTick(tickRef);
+  const clearCompletionTimer = useClearCompletionTimer(completionTimerRef);
+  const startTick = useStartTick(stopTick, tickRef, setSecondsRemaining);
 
   const syncStatus = useCallback(async () => {
     if (isAuthLoading || !isAuthenticated) return;
+    
+    if (checkDescansoActive()) {
+      return; 
+    }
 
     try {
       const requestedAt = Date.now();
@@ -93,6 +96,7 @@ export const PomodoroProvider = ({ children }: { children: ReactNode }) => {
         setSkillEmoji(emojiMapRef.current.get(data.skillName.toLowerCase()) ?? "📚");
         setIsFinished(true);
         setIsRunning(false);
+        setTimerMode("descanso");
         return;
       }
 
@@ -133,6 +137,11 @@ export const PomodoroProvider = ({ children }: { children: ReactNode }) => {
     if (isAuthLoading || !isAuthenticated) return;
     let cancelled = false;
     async function boot() {
+      // Check descanso timer FIRST, synchronously from localStorage
+      const savedDescanso = getSavedDescansoData();
+      const descansoIsActive = savedDescanso && savedDescanso.endTime > Date.now();
+      
+      // Then fetch data
       const [consts, allSkills] = await Promise.all([
         pomodoroService.getValidationConstants().catch(() => null),
         skillService.listAll().catch(() => []),
@@ -140,13 +149,38 @@ export const PomodoroProvider = ({ children }: { children: ReactNode }) => {
       if (cancelled) return;
       if (consts) setConstants(consts);
       emojiMapRef.current = new Map(allSkills.map((s) => [s.name.toLowerCase(), s.emojString ?? "📚"]));
-      await syncStatus();
+      
+      // Now restore descanso timer if active
+      if (descansoIsActive && savedDescanso) {
+        const msRemaining = savedDescanso.endTime - Date.now();
+        const secondsRemaining = Math.ceil(msRemaining / 1000);
+        setSecondsRemaining(secondsRemaining);
+        setIsRunning(true);
+        setDescansoActive(true);
+        startTick();
+        
+        clearCompletionTimer();
+        completionTimerRef.current = setTimeout(() => {
+          stopTick();
+          setIsRunning(false);
+          setIsFinished(true);
+          setDescansoActive(false);
+          setTimerMode("pomodoro"); // Reset back to pomodoro when descanso finishes
+          clearDescansoData();
+        }, msRemaining);
+      } else {
+        // Clean up expired localStorage entry
+        clearDescansoData();
+        // Only sync if no active descanso timer
+        await syncStatusRef.current();
+      }
+      
       if (cancelled) return;
       setIsLoading(false);
     }
     boot();
     return () => { cancelled = true; };
-  }, [isAuthenticated, isAuthLoading, syncStatus]);
+  }, [isAuthenticated, isAuthLoading, startTick, stopTick, clearCompletionTimer]);
 
   // Cleanup on unmount
 
@@ -173,17 +207,49 @@ export const PomodoroProvider = ({ children }: { children: ReactNode }) => {
     setSecondsRemaining(0);
     setIsRunning(false);
     setIsFinished(false);
-    setSkillEmoji("📚");
   }, [status, stopTick, clearCompletionTimer]);
 
   const clearStatus = useCallback(() => {
     clearCompletionTimer();
+    stopTick();
     setStatus(null);
     setSecondsRemaining(0);
     setIsRunning(false);
     setIsFinished(false);
-    setSkillEmoji("📚");
-  }, [clearCompletionTimer]);
+    clearDescansoData();
+  }, [clearCompletionTimer, stopTick]);
+
+  const startDescansoTimer = useCallback((durationSeconds: number) => {
+    const now = Date.now();
+    const endTime = now + (durationSeconds * 1000);
+    
+    setSecondsRemaining(durationSeconds);
+    setIsRunning(true);
+    setDescansoActive(true);
+    startTick();
+    
+    // Persist to localStorage for reload survival
+    saveDescansoData(endTime);
+    
+    const msRemaining = durationSeconds * 1000;
+    clearCompletionTimer();
+    completionTimerRef.current = setTimeout(() => {
+      stopTick();
+      setIsRunning(false);
+      setIsFinished(true);
+      setDescansoActive(false);
+      setTimerMode("pomodoro"); 
+      clearDescansoData();
+    }, msRemaining);
+  }, [startTick, stopTick, clearCompletionTimer]);
+
+  const isPomodoroActiveCallback = useCallback(() => {
+    return checkPomodoroActive(isRunning, timerMode);
+  }, [isRunning, timerMode]);
+
+  const isDescansoActiveCallback = useCallback(() => {
+    return descansoActive;
+  }, [descansoActive]);
 
   return (
     <PomodoroContext.Provider
@@ -199,6 +265,11 @@ export const PomodoroProvider = ({ children }: { children: ReactNode }) => {
         abandon,
         clearStatus,
         syncStatus,
+        timerMode,
+        setTimerMode,
+        startDescansoTimer,
+        isDescansoActive: isDescansoActiveCallback,
+        isPomodoroActive: isPomodoroActiveCallback,
       }}
     >
       {children}

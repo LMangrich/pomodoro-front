@@ -23,13 +23,13 @@ export default function HomePage() {
   }
 
   return (
-    <>
+    <div className="min-h-screen flex flex-col">
       <HeaderSection />
-      <main className={cn("max-w-xl md:max-w-5xl mx-auto px-5 lg:px-0")}>
+      <main className={cn("flex-1 max-w-xl md:max-w-5xl mx-auto px-5 lg:px-0 w-full")}>
         <HeroSection />
         <FAQSection />
       </main>
       <Footer />
-    </>
+    </div>
   );
 }

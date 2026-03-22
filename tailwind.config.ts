@@ -22,6 +22,8 @@ const config: Config = {
         "text-primary": "#E8EBFF",
         "button-primary": "#CCA3FF",
         "button-secondary": "#E8EBFF",
+        "button-disabled": "#6F598B",
+        "text-disabled": "#272230",
       },
       fontSize: {
         "10": "10px",

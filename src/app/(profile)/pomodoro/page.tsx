@@ -9,10 +9,10 @@ export default function TimerPage() {
   return (
     <ProtectedRoute>
       <HeaderSection />
-      <main className="max-w-5xl mx-auto px-5 lg:px-0">
-        <PomodoroTimerSection />
-      </main>
-      <Footer />
+        <main className="flex-1 max-w-5xl mx-auto px-5 lg:px-0 w-full">          
+          <PomodoroTimerSection />
+        </main>
+        <Footer />
     </ProtectedRoute>
   );
 }

@@ -9,10 +9,10 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = "primary", size = "md", children, ...props }, ref) => {
-    const baseStyles = "rounded-[8px] font-bold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed";
+    const baseStyles = "rounded-[8px] font-bold transition-all duration-200 disabled:bg-button-disabled disabled:cursor-not-allowed";
     
     const variants = {
-      primary: "bg-button-primary border-2 border-button-primary text-background hover:opacity-90",
+      primary: "bg-button-primary text-background hover:bg-off-white  disabled:bg-button-disabled disabled:cursor-not-allowed",
       secondary: "bg-transparent border-2 border-button-secondary text-button-secondary hover:bg-button-secondary hover:text-background",
     };
     
