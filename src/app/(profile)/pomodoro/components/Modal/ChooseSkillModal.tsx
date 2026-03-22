@@ -10,6 +10,7 @@ import { RayIcon, StandingUpGirlIcon } from "@/src/components/Icon/Icon";
 import { Input } from "@/src/components/Input/Input";
 import { Button } from "@/src/components/Button/Button";
 import Pagination from "@/src/components/Pagination/Pagination";
+import { LoadingSplash } from "@/src/components/LoadingSplash/LoadingSplash";
 
 const SKILLS_PER_PAGE = 6;
 
@@ -116,7 +117,7 @@ export default function ChooseSkillModal({
           </h3>
 
           {isLoading ? (
-            <p className="text-off-white text-12 md:text-14">Carregando habilidades...</p>
+            <LoadingSplash />
           ) : error ? (
             <p className="text-red-400 text-12 md:text-14">Erro ao carregar habilidades: {error}</p>
           ) : (

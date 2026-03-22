@@ -20,7 +20,7 @@ export const SideMenu = ({
   className,
 }: SideMenuProps) => {
   const router = useRouter();
-  const { clearUserData } = useUser();
+  const { clearUserData, userData } = useUser();
 
   useEffect(() => {
     if (isOpen) {
@@ -62,7 +62,7 @@ export const SideMenu = ({
         </button>
 
         <div className="flex flex-col items-center h-full p-6 gap-4">
-          <button onClick={() => handleNavigation("/perfil")}
+          <button onClick={() => handleNavigation(`/perfil/@${userData?.username}`)}
             className="w-full text-left px-4 py-3 rounded-md hover:bg-light-gray/10 transition-colors text-off-white font-semibold text-16"
           >
             MEU PERFIL

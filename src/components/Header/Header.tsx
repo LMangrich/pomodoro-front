@@ -10,7 +10,7 @@ import { authService } from "@/src/services/auth.service";
 import { SideMenu } from "./components/SideMenu";
 
 export default function HeaderSection() {
-  const { isAuthenticated, clearUserData } = useUser();
+  const { isAuthenticated, clearUserData, userData } = useUser();
   const [menuOpen, setMenuOpen] = useState(false);
   const router = useRouter();
 
@@ -46,7 +46,7 @@ export default function HeaderSection() {
 
             <div className="hidden md:flex items-center gap-6">
               <button
-                onClick={() => router.push("/perfil")}
+                onClick={() => router.push(`/perfil/@${userData?.username}`)}
                 className="text-off-white hover:text-custom-light-purple transition-colors font-semibold text-14"
               >
                 MEU PERFIL

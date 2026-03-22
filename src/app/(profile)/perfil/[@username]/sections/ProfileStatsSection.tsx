@@ -5,6 +5,7 @@ import { useUser } from "@/src/context/UserContext";
 import { useUserProfile } from "@/src/hooks/useUserProfile";
 import { RayIcon } from "@/src/components/Icon/Icon";
 import Pagination from "@/src/components/Pagination/Pagination";
+import { LoadingSplash } from "@/src/components/LoadingSplash/LoadingSplash";
 
 const SKILLS_PER_PAGE = 6;
 
@@ -26,7 +27,7 @@ export default function ProfileStatsSection() {
         </h2>
 
         {isLoading ? (
-          <p className="text-off-white text-12 md:text-14">Carregando habilidades...</p>
+          <LoadingSplash />
         ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4 mb-6">
           {paginated.map((skill) => (

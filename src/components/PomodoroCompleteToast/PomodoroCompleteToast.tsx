@@ -58,7 +58,7 @@ export default function PomodoroCompleteToast() {
 
   const handleGoToProfile = () => {
     clearStatus();
-    router.push("/perfil");
+    router.push(`/perfil/@${userData?.username}`);
   };
 
   const xpEarned = status.xpNotification ? Number(status.xpNotification) : status.expectedXp;
