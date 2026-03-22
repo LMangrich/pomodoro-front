@@ -216,6 +216,7 @@ export const PomodoroProvider = ({ children }: { children: ReactNode }) => {
     setSecondsRemaining(0);
     setIsRunning(false);
     setIsFinished(false);
+    setDescansoActive(false);
     clearDescansoData();
   }, [clearCompletionTimer, stopTick]);
 

@@ -55,6 +55,7 @@ export const usePomodoroTimer = ({
   const [selectedSkill, setSelectedSkill] = useState<Skill | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [previewXp, setPreviewXp] = useState<number | null>(null);
+  const [isStarting, setIsStarting] = useState(false);
 
   const durationSeconds = durationOverride ?? defaultDurationSeconds;
   const durationMinutes = durationSeconds / 60;
@@ -131,9 +132,11 @@ export const usePomodoroTimer = ({
   // Timer control handlers
   const handleStart = useCallback(async () => {
     if (timerMode === "pomodoro" && !selectedSkill) return;
+    if (isStarting) return; // Prevent multiple submissions
 
-    if (timerMode === "pomodoro") {
-      try {
+    setIsStarting(true);
+    try {
+      if (timerMode === "pomodoro") {
         await pomodoroService.start({
           skillId: selectedSkill!.id,
           durationTime: durationMinutes,
@@ -143,17 +146,19 @@ export const usePomodoroTimer = ({
             selectedSkill as typeof selectedSkill & { emojString?: string }
           ).emojString
         );
-      } catch (err) {
-        alert(
-          `Erro ao iniciar pomodoro: ${
-            err instanceof Error ? err.message : "Desconhecido"
-          }`
-        );
+      } else {
+        startDescansoTimer(durationSeconds);
       }
-    } else {
-      startDescansoTimer(durationSeconds);
+    } catch (err) {
+      alert(
+        `Erro ao iniciar pomodoro: ${
+          err instanceof Error ? err.message : "Desconhecido"
+        }`
+      );
+    } finally {
+      setIsStarting(false);
     }
-  }, [timerMode, selectedSkill, durationMinutes, durationSeconds, notifyStarted, startDescansoTimer]);
+  }, [timerMode, selectedSkill, durationMinutes, durationSeconds, notifyStarted, startDescansoTimer, isStarting]);
 
   const handleAbandon = useCallback(async () => {
     try {
@@ -188,6 +193,7 @@ export const usePomodoroTimer = ({
     isModalOpen,
     previewXp,
     durationDraft,
+    isStarting,
 
     // State setters
     setDurationOverride,

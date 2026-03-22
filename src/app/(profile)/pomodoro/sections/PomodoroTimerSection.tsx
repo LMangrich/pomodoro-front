@@ -51,6 +51,7 @@ export default function PomodoroTimerSection() {
     activeSkillName,
     minutesPart,
     secondsPart,
+    isStarting,
   } = usePomodoroTimer({
     minDuration,
     maxDuration,
@@ -197,7 +198,7 @@ export default function PomodoroTimerSection() {
             <Button
               variant="primary"
               onClick={handleStart}
-              disabled={timerMode === "pomodoro" && !selectedSkill}
+              disabled={isStarting || (timerMode === "pomodoro" && !selectedSkill)}
               className={cn("w-full h-[46px]")}
             >
               COMEÇAR
