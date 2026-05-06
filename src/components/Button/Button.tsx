@@ -12,7 +12,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     const baseStyles = "rounded-[8px] font-bold transition-all duration-200 disabled:bg-button-disabled disabled:cursor-not-allowed";
     
     const variants = {
-      primary: "bg-button-primary text-background hover:bg-off-white  disabled:bg-button-disabled disabled:cursor-not-allowed",
+      primary: "bg-button-primary border-2 border-button-primary text-background hover:bg-off-white  disabled:bg-button-disabled disabled:cursor-not-allowed",
       secondary: "bg-transparent border-2 border-button-secondary text-button-secondary hover:bg-button-secondary hover:text-background",
     };
     
